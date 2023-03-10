@@ -13,7 +13,7 @@ Hay tres objetivos especificos para esta actividad:
 2. Aprender como los procesos son creados, destruidos y gestionados.
 3. Ganar exposición a la funcionalidad necesaria en los shells.
 
-## Overview ##
+## Introducción ##
 
 En esta actividad usted  implementará un command line interpreter (CLI), tambien conocido mas comunmente como shell. El shell funciona basicamente de la siguiente manera: Cuando usted escribe un comando (en respuesta a su prompt), el shell crea un proceso hijo y entonces ejecuta el comando que usted digitó; luego, cuando este comento se ejecuta se retorna al promt a la espera de otro comando.
 
@@ -21,7 +21,7 @@ El shell a implementar será similar pero mas simple al implementado en Unix.
 
 ## Especificaciones del programa ##
 
-### Basic Shell: wish ###
+### Shell básico: wish ###
 
 Su shell basico será llamadao **wish** (abreviación para Wisconsin Shell, de la cual se tomó esta practica), un shell es basicamente un loop interactivo que: imprime repetidamente el promp ```wish> ``` (nota: despues del signo ```>``` hay un espacio), analiza (parse) el comando ingresado a la entrada, ejecuta dicho comando y espera a que este finalice. Este proceso es repetido hasta que el usuario digite ```exit```. Una vez compile el código, el nombre final de su ejecutable será ```wish```.
 
@@ -44,9 +44,9 @@ Una diferencia entre el los modos batch e interactivo es que en el modo interact
 
 Usted deberia estructurar su shell de manera que cree un procesos para cada nuevo comando (con los built-in commands, que se discutirán abajo, como excepción). El shell basico deberá ser capaz de analizar (parser) un comando y correr el programa correspondiente a ese comando. Por ejemplo, si el usuario digita ```ls -la /tmp```, el shell deberia ejecutar el programa ```/bin/ls``` con los argumentos dados ```-la``` y ```/tmp``` (¿Como sabe el shell ejecutar ```/bin/ls```?. Es algo llamado **shell path**; mas de esto abajo).
 
-## Structure ##
+## Estructura ##
 
-### Basic Shell ###
+### Shell básico ###
 
 El shell es muy simple (conpeptualmente): Este corre en un ciclo infinito solicitando repetidamente una entrada que dice el comando a ejecutar. Luego ejecuta ese comando. El ciclo continua indefinidamente hasta que el usuario escribe el comando integrado (built-in ) ```exit```, el cual hace que se salga del shell.
 
@@ -77,7 +77,7 @@ La **shell path** inicial debe contener solo un directorio: ```/bin```.
 
 **Nota**: La mayoría de los shells permiten especificar un binario sin usar una ruta de búsqueda (**search path**), usando rutas absolutas o rutas relativas. Por ejemplo, un usuario podría escribir la ruta absoluta ```/bin/ls``` y ejecutar el binario ```ls``` sin necesidad de una ruta de búsqueda. Un usuario también podría especificar una ruta relativa que comienza con el directorio de trabajo actual y especifica el ejecutable directamente, por ejemplo, ```./main```. En este proyecto, no tiene que preocuparse por estas características.
 
-### Built-in Commands ###
+### Comandos Built-in ###
 
 Siempre que el shell acepte un comando, deberá validar si el comando es un **built-in command** o no. Si lo es, no será ejecutado como otros programas. En vez de eso, el shell invocará su implementación del comando integrado (**built-in command**). Por ejemplo, para implementar el comando integrado ```exit```, simplemente basta invocar la función ```exit(0)``` implementada en el codigo fuente del shell **wish** lo cual, permitirá entonces salir del shell. 
 
@@ -117,8 +117,6 @@ Luego, después de iniciar todos estos procesos, asegurese de usar ```wait()``` 
 
 ### Program Errors ###
 
-The one and only error message. You should print this one and only error message whenever you encounter an error of any type:
-
 **Solo hay un mensaje de error** el cual se debe imprimir cada vez que se encuentre un error de cualquier tipo:
 
 ```C
@@ -142,105 +140,3 @@ Verifique los códigos de retorno de todas las llamadas al sistema desde el comi
 ¡Mejore su propio código! Usted es el mejor (y en este caso, el único) evaluador de este código. Agregue muchas entradas diferentes y asegúrese de que el shell se comporte bien. El buen código se obtiene mediante pruebas; debe ejecutar muchas pruebas diferentes para asegurarse de que todo funcione como se desea. No sea amable -- otros usuarios ciertamente no lo serán.
 
 Finalmente, conserve las versiones de su código. Los programadores más avanzados utilizarán un sistema de control de fuentes como git. Como mínimo, cuando tenga una parte de la funcionalidad funcionando, haga una copia de su archivo .c (quizás un subdirectorio con un número de versión, como v1, v2, etc.). Al mantener las versiones más antiguas y funcionales, puede trabajar cómodamente para agregar nuevas funciones, con la seguridad de saber que siempre puede volver a una versión más antigua y funcional si es necesario.
-
-## Anexo ##
-
-Aunque estos fragmentos de código no estan asociados al libro de Remzi, entenderlos puede ser de utilidad para el desarrollo de la practica. Si desea profundizar un poco mas puede consultar el siguiente documento: [Shell Program](LinuxTutorial2.pdf)
-
-
-### Esqueleto de un bash ###
-
-El siguiente fragmento de codigo muestra la estructura general de un bash interactivo.
-
-```C
-
-const char *mypath[] = {
-  "./",
-  "/usr/bin/",
-  "/bin/",
-  NULL
-};
-
-/** Dentro del main del intérprete*/
-while (...) {
-  /* Wait for input */
-  printf ("prompt> ");
-  fgets (...);
-  /* Parse input */
-  while (( ... = strsep (...)) != NULL) {
-    ...
-  }
-
-  /* If necessary locate executable using mypath array */
-  /* Launch executable */
-  if (fork () == 0) {
-    ...
-    execv (...);
-    ...
-  }
-  else
-  {
-    wait (...);
-  }
-}
-
-```
-
-### Ejecución de un comando integrado ###
-
-Recuerde que los comandos integrados no son mas que funciones que hacen llamadas de sistema del API Posix cuando son invocadas, por ello no es necesario usar ```fork()``` y ```exec()``` en estos casos:
-
-```C
-/** Comandos como funciones */
-tipo_retorno orden1 (tipo args, ...);
-...
-tipo_retorno ordenN(tipo args, ...);
-
-
-/** Dentro del main del intérprete*/
-  ...
-  /* Hacer el parsing de la entrada */
-  num = separaItems (expresion, &items, &background);
-  ...
-  /* Obtener comando */
-  if(ordenIngresada == orden1) {
-     /* Lanzar el ejecutable asociado a la orden 1 */
-     // Código...
-  }
-  ...
-  else if(ordenIngresada == ordenN) {
-     /* Lanzar el ejecutable asociado a la orden 1 */
-     // Codigo: suponiendo que es interna…
-     ordenN(parametros); // Como se llame dependerá si tiene o no &
-  }
-  ...
-```
-
-### Ejecución de un externo ###
-
-Cuando el comando ingresado es externo, se hace uso de la pareja ```fork()``` y ```exec()``` para que este sea llamado desde el interprete.
-
-```C
-/** Dentro del main del interprete*/
-  ...
-  /* Hacer el parsing de la entrada */
-  num = separaItems (expresion, &items, &background);
-  ...
-  /* Obtener comando */
-  if(ordenIngresada == orden1) {
-     /* Lanzar el ejecutable asociado a la orden 1 */
-     // Codigo...
-  }
-  ...
-  else if(ordenIngresada == ordenN) {
-     /* Lanzar el ejecutable asociado a la orden 1 */
-     // Codigo: suponiendo que es externa…
-     if (fork () == 0) {
-        ...
-        execv (...); // Acá va la invocación de la orden externa
-        ...
-     }
-     ...
-  }
-  ...
-```
