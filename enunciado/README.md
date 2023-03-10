@@ -42,13 +42,13 @@ prompt> ./wish batch.txt
 
 Una diferencia entre el los modos batch e interactivo es que en el modo interactivi, un promt es impreso (**wish> **) mientras que en el modo batch el prompt no es impreso. 
 
-Usted deberia estructurar su shell de manera que cree un procesos para cada nuevo comando (con los built-in commands, que se discutirán abajo, como excepción). El shell basico deberpa ser capas de analizar (parser) un comando y correr el programa correspondiente a ese comando. Por ejemplo, si el usuario digita ```ls -la /tmp```, el shell deberia ejecutar el programa ```/bin/ls``` con los argumentos dados ```-la``` y ```/tmp``` (¿Como sabe el shell ejecutar ```/bin/ls```?. Es algo llamado **shell path**; mas de esto abajo).
+Usted deberia estructurar su shell de manera que cree un procesos para cada nuevo comando (con los built-in commands, que se discutirán abajo, como excepción). El shell basico deberá ser capaz de analizar (parser) un comando y correr el programa correspondiente a ese comando. Por ejemplo, si el usuario digita ```ls -la /tmp```, el shell deberia ejecutar el programa ```/bin/ls``` con los argumentos dados ```-la``` y ```/tmp``` (¿Como sabe el shell ejecutar ```/bin/ls```?. Es algo llamado **shell path**; mas de esto abajo).
 
 ## Structure ##
 
 ### Basic Shell ###
 
-El sel es muy simple (conpeptualmente): Este corre en un ciclo infinito solicitando repetidamente una entrada que dice el comando a ejecutar. Luego ejecuta ese comando. El ciclo continua indefinidamente hasta que el usuario escribe el comando integrado (built-in ) ```exit```, el cual hace que se salga del shell.
+El shell es muy simple (conpeptualmente): Este corre en un ciclo infinito solicitando repetidamente una entrada que dice el comando a ejecutar. Luego ejecuta ese comando. El ciclo continua indefinidamente hasta que el usuario escribe el comando integrado (built-in ) ```exit```, el cual hace que se salga del shell.
 
 Para leer las lineas de entrada, usted podría usar ```getline()```. Esta le permite obtener lineas de entrada arbitrariamente largas con facilidad. Generalmente, el shell correra en **interactive mode** (modo interactivo), donde el usuario digita un comando (uno a la vez) y el shell actua sobre este. Sin embargo, el shell tambien soportara el **batch mode**, en el cual al shell se le da como entrada un archivo de comandos; en este caso, el shell no leerá la entrada de usuario (de **stdin**) sino que la entrada será tomada desde un archivo que contendrá los comandos a ejecutar.
 
