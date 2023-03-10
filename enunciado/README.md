@@ -1,6 +1,6 @@
 # Enunciado - Unix Shell #
 
-> **Nota**: Esta practica es una traducción de la práctica [Process Shell](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell) del libro de Remzi. Esta traducción puede tener muchos errores y a veces no ser fiel con lo que el autor quiere transmitir. Si desea leerla en ingles puede encontrar esto en el siguiente [enlace](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell).
+> **Nota**: Esta practica es una traducción de la práctica [Process Shell](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell) del libro de Remzi. Esta traducción puede tener muchos errores y a veces no ser fiel con lo que el autor quiere transmitir. Si desea leerla en ingles puede encontrar esto en el siguiente [enlace](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell). Sin embargo, tenga en cuenta que la parte del historial de comandos no esta incluida allí!
 
 En esta practica, usted construirá un simple Unix shell. El shell es el corazon de la interface de linea de comandos, y por lo tanto es el ambiente de programación central de Unix/C. 
 
@@ -101,7 +101,9 @@ Si el archivo ```output``` existe antes de ejecutar su programa, simplemente deb
 
 El formato exacto de la redirección es un comando (y posiblemente algunos argumentos) seguido del símbolo de redirección seguido de un nombre de archivo. Varios operadores de redirección o varios archivos a la derecha del signo de redirección son errores.
 
-**Nota**: No se preocupe por la redirección de los comandos integrados (por ejemplo, no se probara lo que sucede cuando se digita el comando ```path /bin > file```).
+### Historial de comandos ###
+
+En la consola de Linux, cuando usted oprime la tecla Flecha arriba (UP arrow), usted puede navegar en el historial de los últimos comandos que se han utilizado. Usted debe implementar esta funcionalidad garantizando un historial de hasta 20 comandos.
 
 ### Parallel Commands ###
 
