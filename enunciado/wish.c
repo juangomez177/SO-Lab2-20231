@@ -8,57 +8,78 @@
 
 #define MAX_SIZE 100
 
-char *mypath[] = { "bli","bla","/bin/", ""};
+char *mypath[] = {};
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 
 	char str[MAX_SIZE];
 	char *command_string;
 	char *s;
 	int fd;
+	strcpy(mypath[0],"/bin");
+	mypath[1]=NULL;
 
-	do{
-     		printf("whish> ");
-     		fgets(str, MAX_SIZE, stdin);
+	do
+	{
+		printf("whish> ");
+		fgets(str, MAX_SIZE, stdin);
 		s = str;
-                while(*s != '\n') {
-                	++s;
-                }
-                *s = '\0';
+		while (*s != '\n')
+		{
+			++s;
+		}
+		*s = '\0';
 		s = str;
-                command_string = strtok_r(s, " ", &s);
+		command_string = strtok_r(s, " ", &s);
 
-		if(strcmp(command_string, "exit") == 0){
+		if (strcmp(command_string, "exit") == 0)
+		{
 			execute_exit(0);
-		}else if(strcmp(command_string, "cd") == 0){
+		}
+		else if (strcmp(command_string, "cd") == 0)
+		{
 			execute_cd(s);
-		}else if(strcmp(command_string, "path") == 0){
-			execute_path();
-		}else{
+		}
+		else if (strcmp(command_string, "path") == 0)
+		{
+			execute_path(s);
+		}
+		else
+		{
 			fd = -1;
 			char **mp = mypath;
 			char specificpath[MAX_SIZE];
-			while( (strcmp(*mp, "") != 0)  && fd != 0){
+			while ((strcmp(*mp, "") != 0) && fd != 0)
+			{
 				strcpy(specificpath, *mp++);
 				strncat(specificpath, command_string, strlen(command_string));
 				fd = access(specificpath, X_OK);
 			}
-			if(fd==0){
+			if (fd == 0)
+			{
 				int subprocess = fork();
-				if(subprocess < 0){
+				if (subprocess < 0) // error
+				{
 					printf("Error launching the subprocess");
-				}else if(subprocess == 0){
+				}
+				else if (subprocess == 0) // subproceso hijo
+				{
 					char *myargs[3];
-	  				myargs[0] = strdup(specificpath);
-	  				myargs[1] = strdup(".");
-	  				myargs[2] = NULL;
-	  				execvp(myargs[0], myargs);
-				}else{
+					myargs[0] = strdup(specificpath);
+					myargs[1] = strdup(".");
+					myargs[2] = NULL;
+					execvp(myargs[0], myargs);
+				}
+				else
+				{
 					wait(NULL);
 				}
-			}else{
+			}
+			else
+			{
 				printf("Command not found: %s\n", str);
 			}
 		}
-   	}while(1);
+	} while (1);
 }
