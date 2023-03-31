@@ -5,8 +5,16 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "wish_utils.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #define MAX_SIZE 500
+#define BUFFER_SIZE 1024
+#define HISTORY_SIZE 30
+
+char history[HISTORY_SIZE][BUFFER_SIZE];
+int history_count = 0;
+char *mypath[] = { "bli","usr/bin","/bin/", ""};
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +23,8 @@ int main(int argc, char *argv[])
 	char *command_string;
 	char *s;
 	int fd;
+	char specificpath[MAX_SIZE];
+	char *input_line;
 
 	char **mypath = malloc(2 * sizeof(char *));
 	mypath[0] = "/bin/";
@@ -22,15 +32,32 @@ int main(int argc, char *argv[])
 
 	do
 	{
-		printf("wish> ");
-		fgets(str, MAX_SIZE, stdin);
-		s = str;
-		while (*s != '\n')
+		input_line = readline("wish> ");
+		if (!input_line)
 		{
-			++s;
+			// EOF o error
+			break;
 		}
-		*s = '\0';
-		s = str;
+		if (strlen(input_line) > 0)
+		{
+			add_history(input_line);
+
+			// Copiar cadena de comando al búfer de historial
+			if (history_count < HISTORY_SIZE)
+			{
+				strcpy(history[history_count++], input_line);
+			}
+			else
+			{
+				for (int i = 0; i < HISTORY_SIZE - 1; i++)
+				{
+					strcpy(history[i], history[i + 1]);
+				}
+				strcpy(history[HISTORY_SIZE - 1], input_line);
+			}
+		}
+
+		s = input_line;
 		command_string = strtok_r(s, " ", &s);
 
 		printf("command_string es solo el comando sin argumentos: (%s)\n", command_string);
@@ -150,5 +177,8 @@ int main(int argc, char *argv[])
 				printf("Command not found: %s\n", str);
 			}
 		}
+		free(input_line);
 	} while (1);
+	return 0;
 }
+// para compilar: gcc -o wish wish.c wish_utils.c -lreadline
