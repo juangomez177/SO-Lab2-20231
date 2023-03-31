@@ -14,6 +14,7 @@
 
 char history[HISTORY_SIZE][BUFFER_SIZE];
 int history_count = 0;
+char error_message[30] = "An error has occurred\n";
 
 int main(int argc, char *argv[])
 {
@@ -157,6 +158,49 @@ int main(int argc, char *argv[])
 						i++;
 					}
 					printf("--------------------------------\n");
+					
+					//FUNCIÓN REDIRECCIÓN
+					int i_found = 0, aux = 0;
+					i = 0;
+					printf("ANTES DEL DO");
+					do
+					{
+						if (strcmp(myargs[i], ">") == 0)
+						{
+							aux = aux + 1;
+							i_found = i;
+						}
+						else if (strchr(myargs[i], '>') != NULL)
+						{
+							aux = aux + 2;
+						}
+
+						i++;
+					} while (myargs[i] != NULL);
+					printf("###### VALOR aux", aux);
+					printf("###### VALOR i_found", i_found);
+					printf("###### VALOR myargs[i]", myargs[i-1]);
+
+					if (aux == 1)
+					{
+						// encontro 1 >
+						if (myargs[i_found + 1] == NULL)
+						{
+							write(STDERR_FILENO, error_message, strlen(error_message));
+						}
+						else if (myargs[i_found + 2] != NULL)
+						{
+							write(STDERR_FILENO, error_message, strlen(error_message));
+						}
+						else
+						{
+							char *file = malloc(MAX_SIZE * sizeof(char *));
+							strcpy(file, myargs[i_found + 1]);
+							myargs[i_found] = NULL;
+							myargs[i_found + 1] = NULL;
+							wish_launch_redirect(myargs, file);
+						}
+					}
 
 					// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
 					// Se hace mediente la función execv(), toma 2 argumentos: el primero es la ruta donde se encuentra el ejecutable y el segundo son el nombre de ejecutable con sus argumentos en caso de tenerlos
