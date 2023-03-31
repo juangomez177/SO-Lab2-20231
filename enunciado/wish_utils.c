@@ -84,12 +84,5 @@ void execute_path(char *newpath, char ***mypath)
 		}
 		// set last element of mypath to ""
 		(*mypath)[i] = "";
-
-		// i = 0;
-		// while ((*mypath)[i] != "")
-		// {
-		// 	printf("NEW paths: %s\n", (*mypath)[i]);
-		// 	i++;
-		// }
 	}
 }

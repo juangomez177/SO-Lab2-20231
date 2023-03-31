@@ -14,7 +14,6 @@
 
 char history[HISTORY_SIZE][BUFFER_SIZE];
 int history_count = 0;
-char *mypath[] = { "bli","usr/bin","/bin/", ""};
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +64,7 @@ int main(int argc, char *argv[])
 
 		int i = 0;
 		printf("-------------------mypath--------------\n");
-		while (strcmp(mypath[i],"") != 0)
+		while (strcmp(mypath[i], "") != 0)
 		{
 			printf("%s\n", mypath[i]);
 			i++;
