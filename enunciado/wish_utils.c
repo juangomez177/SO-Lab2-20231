@@ -106,7 +106,6 @@ void execute_path(char *newpath, char ***mypath)
 				{
 					strcat((*mypath)[i], "/");
 				}
-				
 			}
 			path = strtok_r(newpath, " ", &newpath);
 			i++;
@@ -131,7 +130,6 @@ int wish_launch_redirect(char **args, char *file)
 
 	if (pid == 0)
 	{
-
 		// Child process
 		int fd = open(file, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
@@ -139,7 +137,7 @@ int wish_launch_redirect(char **args, char *file)
 		dup2(fd, STDERR_FILENO); // make stderr go to file - you may choose to not do this
 
 		close(fd);
-		execvp(args[0], args);
+		execv(args[0], args);
 	}
 	else if (pid < 0)
 	{

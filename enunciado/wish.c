@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "wish_utils.h"
+#include <libgen.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -81,6 +82,7 @@ void procesar_comando(char *command, char ***mypath)
 			if (*token != '\0')
 			{
 				all_commands[i] = token;
+				// printf("Commands: %s\n",all_commands[i]);
 				i++;
 			}
 			token = strtok(NULL, "&");
@@ -111,7 +113,6 @@ void procesar_comando(char *command, char ***mypath)
 				strncat(specificpath, command_string, strlen(command_string));
 				fd = access(specificpath, X_OK);
 			}
-
 			// Si el file descriptor existe, osea la ruta del programa
 			if (fd == 0)
 			{
@@ -190,6 +191,8 @@ void procesar_comando(char *command, char ***mypath)
 							myargs[i_found + 1] = NULL;
 							if (file != NULL)
 							{
+
+								myargs[0] = strdup(specificpath);
 								wish_launch_redirect(myargs, file);
 							}
 							else
@@ -297,7 +300,7 @@ int main(int argc, char *argv[])
 		{
 			write(STDERR_FILENO, error_message, strlen(error_message));
 			return EXIT_FAILURE;
-			//exit(1);
+			// exit(1);
 		}
 
 		// Leer lineas del archivo
@@ -322,7 +325,7 @@ int main(int argc, char *argv[])
 	else if (argc > 2)
 	{
 		write(STDERR_FILENO, error_message, strlen(error_message));
-		 return EXIT_FAILURE;
+		return EXIT_FAILURE;
 	}
 
 	return 0;
