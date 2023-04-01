@@ -1,0 +1,5 @@
+ls
+pwd
+ls -la
+pwd & ls&   &&
+exit
