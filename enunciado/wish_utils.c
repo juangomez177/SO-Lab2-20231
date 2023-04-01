@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/utsname.h>
 #include "wish_utils.h"
 
 char error_message2[30] = "An error has occurred\n";
@@ -86,7 +87,15 @@ void execute_path(char *newpath, char ***mypath)
 			// Verificar si el path es igual a "bin", y si es así, cambiarlo a "/bin/"
 			if (strcmp(path, "bin") == 0 || strcmp(path, "/bin") == 0 || strcmp(path, "/bin/") == 0 || strcmp(path, "./bin") == 0 || strcmp(path, "./bin/") == 0)
 			{
-				(*mypath)[i] = strdup("/bin/");
+				struct utsname u;
+                uname(&u);
+                if (strcmp(u.sysname, "Darwin") == 0) { // verificar si es macOS
+                    (*mypath)[i] = strdup("/usr/bin/");
+                }
+                else {
+                    (*mypath)[i] = strdup("/bin/");
+                }
+				
 			}
 			else
 			{
