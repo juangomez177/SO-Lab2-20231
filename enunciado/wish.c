@@ -188,23 +188,37 @@ void procesar_comando(char *command, char ***mypath)
 							strcpy(file, myargs[i_found + 1]);
 							myargs[i_found] = NULL;
 							myargs[i_found + 1] = NULL;
-							wish_launch_redirect(myargs, file);
+							if (file != NULL)
+							{
+								wish_launch_redirect(myargs, file);
+							}
+							else
+							{
+								write(STDERR_FILENO, error_message, strlen(error_message));
+							}
 						}
 					}
+					else if (aux > 1)
+					{
+						write(STDERR_FILENO, error_message, strlen(error_message));
+					}
 
-					// Lanzo el proceso hijo como un nuevo programa
-					// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
-					execv(specificpath, myargs);
+					else
+					{
+
+						// Lanzo el proceso hijo como un nuevo programa
+						// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
+						execv(specificpath, myargs);
+					}
 
 					// Si execv() es exitoso, lo siguiente nunca se ejecutará, por precaución para una salida segura
-					printf("Error al ejecutar execvp\n");
 					exit(EXIT_FAILURE);
 
 				} // Fin del proceso hijo
 			}	  // Si el file descriptor no existe
 			else
 			{
-				printf("Command not found: %s\n\n", all_commands[i]);
+				write(STDERR_FILENO, error_message, strlen(error_message));
 			}
 		} // Fin del for
 
@@ -218,7 +232,7 @@ void procesar_comando(char *command, char ***mypath)
 	} // Comando incorrecto
 	else
 	{
-		printf("Comando incorrecto %s\n", command);
+		write(STDERR_FILENO, error_message, strlen(error_message));
 	}
 }
 
@@ -279,10 +293,11 @@ int main(int argc, char *argv[])
 		int num_commands = 0;
 
 		FILE *fp = fopen(argv[1], "r");
-		if (fp == NULL)
+		if (!fp)
 		{
-			printf("Error opening file\n");
-			exit(1);
+			write(STDERR_FILENO, error_message, strlen(error_message));
+			return EXIT_FAILURE;
+			//exit(1);
 		}
 
 		// Leer lineas del archivo
@@ -304,9 +319,10 @@ int main(int argc, char *argv[])
 			procesar_comando(input_line, &mypath);
 		}
 	}
-	else if (argc > 1)
+	else if (argc > 2)
 	{
 		write(STDERR_FILENO, error_message, strlen(error_message));
+		 return EXIT_FAILURE;
 	}
 
 	return 0;

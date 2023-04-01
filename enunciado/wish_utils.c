@@ -9,11 +9,15 @@
 
 char error_message2[30] = "An error has occurred\n";
 
-void execute_exit(char *args){
+void execute_exit(char *args)
+{
 	char *path = strtok_r(args, " ", &args);
-	if(path != NULL){
-		write(STDERR_FILENO, error_message2, strlen(error_message2)); 
-	}else{
+	if (path != NULL)
+	{
+		write(STDERR_FILENO, error_message2, strlen(error_message2));
+	}
+	else
+	{
 		exit(0);
 	}
 }
@@ -24,24 +28,23 @@ void execute_cd(char *newpath)
 	char *path = strtok_r(newpath, " ", &newpath);
 	if (path == NULL)
 	{
-		printf("Error: el comando cd requiere un argumento\n");
+		write(STDERR_FILENO, error_message2, strlen(error_message2));
 	}
 	else
 	{
 		if (strtok_r(NULL, " ", &newpath) != NULL)
 		{
-			printf("Error: el comando cd solo acepta un argumento\n");
+			write(STDERR_FILENO, error_message2, strlen(error_message2));
 		}
 		else
 		{
-			if (access(path, F_OK) == 0)//Si la ruta existe
+			if (access(path, F_OK) == 0) // Si la ruta existe
 			{
 				chdir(path);
-				printf("La nueva ruta es %s\n", path);
 			}
 			else
 			{
-				printf("Directory does not exist: %s\n", path);
+				write(STDERR_FILENO, error_message2, strlen(error_message2));
 			}
 		}
 	}
@@ -65,7 +68,12 @@ void execute_path(char *newpath, char ***mypath)
 	// Path con cero argumentos
 	if (path_count == 0)
 	{
-		printf("Variable mypath sin modificaciones\n");
+		i = 0;
+		while (strcmp((*mypath)[i], "") != 0)
+		{
+			(*mypath)[i] = strdup("");
+			i++;
+		}
 	}
 	else
 	{ // Path con n argumentos
@@ -75,32 +83,63 @@ void execute_path(char *newpath, char ***mypath)
 		i = 0;
 		while (path != NULL)
 		{
-			(*mypath)[i] = strdup(path);
+			// Verificar si el path es igual a "bin", y si es así, cambiarlo a "/bin/"
+			if (strcmp(path, "bin") == 0 || strcmp(path, "/bin") == 0 || strcmp(path, "/bin/") == 0 || strcmp(path, "./bin") == 0 || strcmp(path, "./bin/") == 0)
+			{
+				(*mypath)[i] = strdup("/bin/");
+			}
+			else
+			{
+				if (strstr(path, "./") != path)
+				{
+					char *new_path = malloc(strlen(path) + 3); // 2 para "./" y 1 para '\0'
+					strcpy(new_path, "./");
+					strcat(new_path, path);
+					(*mypath)[i] = new_path;
+				}
+				else
+				{
+					(*mypath)[i] = strdup(path);
+				}
+				// Verificar si el path termina con /
+				if (path[strlen(path) - 1] != '/')
+				{
+					strcat((*mypath)[i], "/");
+				}
+				
+			}
 			path = strtok_r(newpath, " ", &newpath);
 			i++;
 		}
 		// set last element of mypath to ""
 		(*mypath)[i] = "";
+
+		// i = 0;
+		// while ((*mypath)[i] != "")
+		// {
+		// 	printf("NEW paths: %s\n", (*mypath)[i]);
+		// 	i++;
+		// }
 	}
 }
-
-
 
 int wish_launch_redirect(char **args, char *file)
 {
 	pid_t pid, wpid;
 	int status;
 	pid = fork();
+
 	if (pid == 0)
 	{
+
 		// Child process
 		int fd = open(file, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
-		dup2(fd, 1); // make stdout go to file
-		dup2(fd, 2); // make stderr go to file - you may choose to not do this
-					 // or perhaps send stderr to another file
+		dup2(fd, STDOUT_FILENO); // make stdout go to file
+		dup2(fd, STDERR_FILENO); // make stderr go to file - you may choose to not do this
+
 		close(fd);
-		execv(args[0], args);
+		execvp(args[0], args);
 	}
 	else if (pid < 0)
 	{
@@ -114,4 +153,3 @@ int wish_launch_redirect(char **args, char *file)
 	}
 	return 1;
 }
-	
