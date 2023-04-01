@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include "wish_utils.h"
 
 char error_message2[30] = "An error has occurred\n";
@@ -80,3 +83,35 @@ void execute_path(char *newpath, char ***mypath)
 		(*mypath)[i] = "";
 	}
 }
+
+
+
+int wish_launch_redirect(char **args, char *file)
+{
+	pid_t pid, wpid;
+	int status;
+	pid = fork();
+	if (pid == 0)
+	{
+		// Child process
+		int fd = open(file, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+
+		dup2(fd, 1); // make stdout go to file
+		dup2(fd, 2); // make stderr go to file - you may choose to not do this
+					 // or perhaps send stderr to another file
+		close(fd);
+		execv(args[0], args);
+	}
+	else if (pid < 0)
+	{
+		// Error forking
+		write(STDERR_FILENO, error_message2, strlen(error_message2));
+	}
+	else
+	{
+		// Parent process
+		wait(NULL);
+	}
+	return 1;
+}
+	
