@@ -1,30 +1,23 @@
-/*
-	Ejecucion de multiples subprocesos con batch e interactivo mode
-	Para probar, puede usar como ejemplo "ls & pwd & ls -la"
-
-	para compilar: gcc -o wish wish.c wish_utils.c -lreadline
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/wait.h>
+#include <termios.h>
 #include "wish_utils.h"
-#include <libgen.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 
-#define MAX_COMMANDS 1000
 #define MAX_SIZE 500
-#define BUFFER_SIZE 1024
-#define HISTORY_SIZE 30
-// #define DELIMITERS " \t\r\n\a\0"
+#define MAX_INPUT_LENGTH 1024
+#define MAX_COMMANDS 1000
 
 char error_message[30] = "An error has occurred\n";
-char history[HISTORY_SIZE][BUFFER_SIZE];
 int history_count = 0;
+
+char *history[MAX_INPUT_LENGTH];
+int history_size = 0;
+int current_history_index = 0;
+
+static struct termios old, current;
 
 void procesar_comando(char *command, char ***mypath)
 {
@@ -46,6 +39,7 @@ void procesar_comando(char *command, char ***mypath)
 		else if (strcmp(command_string, "cd") == 0)
 		{
 			execute_cd(s);
+			
 		}
 		else if (strcmp(command_string, "path") == 0)
 		{
@@ -211,6 +205,7 @@ void procesar_comando(char *command, char ***mypath)
 
 						// Lanzo el proceso hijo como un nuevo programa
 						// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
+						puts(""); 
 						execv(specificpath, myargs);
 					}
 
@@ -221,7 +216,7 @@ void procesar_comando(char *command, char ***mypath)
 			}	  // Si el file descriptor no existe
 			else
 			{
-				write(STDERR_FILENO, error_message, strlen(error_message));
+				write(STDERR_FILENO,error_message, strlen(error_message));
 			}
 		} // Fin del for
 
@@ -237,6 +232,86 @@ void procesar_comando(char *command, char ***mypath)
 	{
 		write(STDERR_FILENO, error_message, strlen(error_message));
 	}
+	
+}
+
+char *get_input()
+{
+	char *input_line = malloc(MAX_INPUT_LENGTH);
+	int current_position = 0;
+
+	struct termios term_settings;
+	tcgetattr(STDIN_FILENO, &term_settings);
+	term_settings.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &term_settings);
+
+	int input_char = getchar();
+	while (input_char != '\n' && input_char != EOF)
+	{
+		if (input_char == '\033')
+		{			   // Si la entrada es una secuencia de escape
+			getchar(); // saltar el [
+			input_char = getchar();
+			if (input_char == 'A' && current_history_index > 0)
+			{ // Felcha arriba
+				current_history_index--;
+				for (int i = 0; i < current_position; i++)
+				{
+					printf("\b \b"); // Borrar la entrada actual
+				}
+				strcpy(input_line, history[current_history_index]);
+				current_position = strlen(input_line);
+				printf("%s", input_line);
+			}
+			else if (input_char == 'B' && current_history_index < history_size)
+			{ // Flecha abajo
+				current_history_index++;
+				for (int i = 0; i < current_position; i++)
+				{
+					printf("\b \b"); // Borrar la entrada actual
+				}
+				if (current_history_index == history_size)
+				{
+					memset(input_line, 0, MAX_INPUT_LENGTH);
+				}
+				else
+				{
+					strcpy(input_line, history[current_history_index]);
+				}
+				current_position = strlen(input_line);
+				printf("%s", input_line);
+			}
+		}
+		else if (input_char == 127 || input_char == 8)
+		{ // Backspace
+			if (current_position > 0)
+			{
+				current_position--;
+				printf("\b \b");
+			}
+		}
+		else
+		{
+			input_line[current_position] = input_char;
+			current_position++;
+			printf("%c", input_char);
+		}
+
+		input_char = getchar();
+	}
+	input_line[current_position] = '\0';
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &term_settings);
+
+	return input_line;
+}
+
+void add_history(char *input_line)
+{
+	history[history_size] = malloc(MAX_INPUT_LENGTH);
+	strcpy(history[history_size], input_line);
+	history_size++;
+	current_history_index = history_size;
 }
 
 int main(int argc, char *argv[])
@@ -246,49 +321,25 @@ int main(int argc, char *argv[])
 	mypath[0] = "/bin/";
 	mypath[1] = "";
 
-	// Para capturar la entrada
 	char *input_line;
-
 	// Modo interactivo
 	if (argc == 1)
 	{
-
 		do
 		{
+			printf("wish> ");
+			input_line = get_input();
 
-			input_line = readline("wish> ");
-			if (!input_line)
-			{
-				// EOF o error
-				break;
-			}
-			if (strlen(input_line) > 0)
+			if (input_line[0] != '\0')
 			{
 				add_history(input_line);
-
-				// Copiar cadena de comando al búfer de historial
-				if (history_count < HISTORY_SIZE)
-				{
-					strcpy(history[history_count++], input_line);
-				}
-				else
-				{
-					for (int i = 0; i < HISTORY_SIZE - 1; i++)
-					{
-						strcpy(history[i], history[i + 1]);
-					}
-					strcpy(history[HISTORY_SIZE - 1], input_line);
-				}
+				// Procesar el comando
+				procesar_comando(input_line, &mypath);
 			}
 
-			// Parseo de la entrada capturada con el fin de secuencia
-			input_line[strcspn(input_line, "\n")] = '\0';
-
-			// Ejecuto el comando
-			procesar_comando(input_line, &mypath);
-
+			free(input_line);
+			puts(""); 
 		} while (1);
-		free(input_line);
 	}
 	else if (argc == 2) // Modo batch
 	{
