@@ -2,7 +2,11 @@
 	Ejecucion de multiples subprocesos con batch e interactivo mode
 	Para probar, puede usar como ejemplo "ls & pwd & ls -la"
 
-	para compilar: gcc -o wish wish.c wish_utils.c -lreadline
+	Para compilar: gcc -o wish wish.c wish_utils.c -lreadline
+	Para ejecutar ./wish
+	Para correr en modo bath especifíque argumentos ./wish prueba.txt
+	Para ejecutar los tests ./test-wish.sh
+
 */
 
 #include <stdio.h>
@@ -12,7 +16,6 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "wish_utils.h"
-#include <libgen.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -20,7 +23,7 @@
 #define MAX_SIZE 500
 #define BUFFER_SIZE 1024
 #define HISTORY_SIZE 30
-// #define DELIMITERS " \t\r\n\a\0"
+
 
 char error_message[30] = "An error has occurred\n";
 char history[HISTORY_SIZE][BUFFER_SIZE];
@@ -82,7 +85,6 @@ void procesar_comando(char *command, char ***mypath)
 			if (*token != '\0')
 			{
 				all_commands[i] = token;
-				// printf("Commands: %s\n",all_commands[i]);
 				i++;
 			}
 			token = strtok(NULL, "&");
@@ -113,6 +115,7 @@ void procesar_comando(char *command, char ***mypath)
 				strncat(specificpath, command_string, strlen(command_string));
 				fd = access(specificpath, X_OK);
 			}
+
 			// Si el file descriptor existe, osea la ruta del programa
 			if (fd == 0)
 			{
@@ -158,7 +161,6 @@ void procesar_comando(char *command, char ***mypath)
 					i = 0;
 					do
 					{
-
 						if (strcmp(myargs[i], ">") == 0)
 						{
 							aux = aux + 1;
@@ -189,39 +191,29 @@ void procesar_comando(char *command, char ***mypath)
 							strcpy(file, myargs[i_found + 1]);
 							myargs[i_found] = NULL;
 							myargs[i_found + 1] = NULL;
-							if (file != NULL)
-							{
-
-								myargs[0] = strdup(specificpath);
-								wish_launch_redirect(myargs, file);
-							}
-							else
-							{
-								write(STDERR_FILENO, error_message, strlen(error_message));
-							}
+							
+							int fd = open(file, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+							dup2(fd, 1); // make stdout go to file
+							dup2(fd, 2); // make stderr go to file - you may choose to not do this, or perhaps send stderr to another file
+							close(fd);
 						}
 					}
-					else if (aux > 1)
-					{
-						write(STDERR_FILENO, error_message, strlen(error_message));
-					}
 
-					else
-					{
-
-						// Lanzo el proceso hijo como un nuevo programa
-						// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
-						execv(specificpath, myargs);
-					}
+					// Lanzo el proceso hijo como un nuevo programa
+					// Como me interesa ejecutar el proceso hijo como un nuevo programa, mando los argumentos capturados en el comando sobreescribiendo la imagen del proceso en cuestión
+					execv(specificpath, myargs);
 
 					// Si execv() es exitoso, lo siguiente nunca se ejecutará, por precaución para una salida segura
+					write(STDERR_FILENO, error_message, strlen(error_message));
+					//printf("Error al ejecutar execvp\n");
 					exit(EXIT_FAILURE);
 
 				} // Fin del proceso hijo
 			}	  // Si el file descriptor no existe
 			else
-			{
+			{	
 				write(STDERR_FILENO, error_message, strlen(error_message));
+				//printf("Command not found: %s\n\n", all_commands[i]);
 			}
 		} // Fin del for
 
@@ -236,6 +228,7 @@ void procesar_comando(char *command, char ***mypath)
 	else
 	{
 		write(STDERR_FILENO, error_message, strlen(error_message));
+		//printf("Comando incorrecto %s\n", command);
 	}
 }
 
@@ -255,6 +248,16 @@ int main(int argc, char *argv[])
 
 		do
 		{
+			/*
+			printf("-------My path-----------\n");
+				int i=0;
+				while (mypath[i]!=NULL){
+					printf("(%s)\n", mypath[i]);
+					i++;
+				}
+				printf("------------------\n");
+
+			*/
 
 			input_line = readline("wish> ");
 			if (!input_line)
@@ -296,11 +299,11 @@ int main(int argc, char *argv[])
 		int num_commands = 0;
 
 		FILE *fp = fopen(argv[1], "r");
-		if (!fp)
+		if (fp == NULL)
 		{
 			write(STDERR_FILENO, error_message, strlen(error_message));
-			return EXIT_FAILURE;
-			// exit(1);
+			//printf("Error opening file\n");
+			exit(1);
 		}
 
 		// Leer lineas del archivo
@@ -322,10 +325,9 @@ int main(int argc, char *argv[])
 			procesar_comando(input_line, &mypath);
 		}
 	}
-	else if (argc > 2)
+	else if (argc > 1)
 	{
 		write(STDERR_FILENO, error_message, strlen(error_message));
-		return EXIT_FAILURE;
 	}
 
 	return 0;

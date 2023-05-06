@@ -112,42 +112,5 @@ void execute_path(char *newpath, char ***mypath)
 		}
 		// set last element of mypath to ""
 		(*mypath)[i] = "";
-
-		// i = 0;
-		// while ((*mypath)[i] != "")
-		// {
-		// 	printf("NEW paths: %s\n", (*mypath)[i]);
-		// 	i++;
-		// }
 	}
-}
-
-int wish_launch_redirect(char **args, char *file)
-{
-	pid_t pid, wpid;
-	int status;
-	pid = fork();
-
-	if (pid == 0)
-	{
-		// Child process
-		int fd = open(file, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-
-		dup2(fd, STDOUT_FILENO); // make stdout go to file
-		dup2(fd, STDERR_FILENO); // make stderr go to file - you may choose to not do this
-
-		close(fd);
-		execv(args[0], args);
-	}
-	else if (pid < 0)
-	{
-		// Error forking
-		write(STDERR_FILENO, error_message2, strlen(error_message2));
-	}
-	else
-	{
-		// Parent process
-		wait(NULL);
-	}
-	return 1;
 }
